@@ -1,0 +1,33 @@
+# zig-levenshtein
+
+A simple, fast, and allocation-based Levenshtein distance implementation in Zig.
+
+## Installation
+
+Run the following command to add the package to your project:
+
+```bash
+zig fetch --save https://github.com/gokhanaltun/zig-levenshtein/archive/refs/heads/main.tar.gz
+```
+
+Then add it to your `build.zig`:
+
+```zig
+const lev_dep = b.dependency("zig_levenshtein", .{});
+exe.root_module.addImport("levenshtein", lev_dep.module("levenshtein"));
+```
+
+## Usage
+
+```zig
+const std = @import("std");
+const lev = @import("levenshtein");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+
+    const d = try lev.distance("kitten", "sitting", allocator);
+    std.debug.print("distance: {d}\n", .{d}); // 3
+}
+```
