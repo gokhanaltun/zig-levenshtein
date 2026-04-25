@@ -23,11 +23,8 @@ exe.root_module.addImport("levenshtein", lev_dep.module("levenshtein"));
 const std = @import("std");
 const lev = @import("levenshtein");
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-
-    const d = try lev.distance("kitten", "sitting", allocator);
+pub fn main(init: std.process.Init) !void {
+    const d = try lev.distance("kitten", "sitting", init.gpa);
     std.debug.print("distance: {d}\n", .{d}); // 3
 }
 ```
