@@ -27,3 +27,20 @@ test "classic example" {
     const allocator = std.testing.allocator;
     try std.testing.expectEqual(@as(usize, 3), try distance("kitten", "sitting", allocator));
 }
+
+test "unicode turkish" {
+    const allocator = std.testing.allocator;
+    try std.testing.expectEqual(@as(usize, 2), try distance("kış", "kis", allocator));
+    try std.testing.expectEqual(@as(usize, 0), try distance("kış", "kış", allocator));
+    try std.testing.expectEqual(@as(usize, 1), try distance("kış", "kıs", allocator)); // sadece ş → s
+}
+
+test "unicode chinese" {
+    const allocator = std.testing.allocator;
+    try std.testing.expectEqual(@as(usize, 1), try distance("你好", "你坏", allocator));
+}
+
+test "unicode arabic" {
+    const allocator = std.testing.allocator;
+    try std.testing.expectEqual(@as(usize, 1), try distance("مرحبا", "مرحبة", allocator));
+}

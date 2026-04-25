@@ -7,7 +7,7 @@ A simple, fast, and allocation-based Levenshtein distance implementation in Zig.
 Run the following command to add the package to your project:
 
 ```bash
-zig fetch --save https://github.com/gokhanaltun/zig-levenshtein/archive/refs/tags/v1.0.0.tar.gz
+zig fetch --save https://github.com/gokhanaltun/zig-levenshtein/archive/refs/tags/v1.1.0.tar.gz
 ```
 
 Then add it to your `build.zig`:
