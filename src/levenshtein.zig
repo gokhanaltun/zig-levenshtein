@@ -1,48 +1,49 @@
 const std = @import("std");
 
 pub fn distance(s1: []const u8, s2: []const u8, allocator: std.mem.Allocator) !usize {
-    const view1 = try std.unicode.Utf8View.init(s1);
-    const view2 = try std.unicode.Utf8View.init(s2);
+    _ = try std.unicode.Utf8View.init(s1);
+    _ = try std.unicode.Utf8View.init(s2);
 
-    // collect codepoints
-    var cp1: std.ArrayListUnmanaged(u21) = .empty;
-    defer cp1.deinit(allocator);
-    var cp2: std.ArrayListUnmanaged(u21) = .empty;
-    defer cp2.deinit(allocator);
-
-    var iter1 = view1.iterator();
-    while (iter1.nextCodepoint()) |cp| try cp1.append(allocator, cp);
-
-    var iter2 = view2.iterator();
-    while (iter2.nextCodepoint()) |cp| try cp2.append(allocator, cp);
-
-    const len1 = cp1.items.len;
-    const len2 = cp2.items.len;
+    const len1 = try std.unicode.utf8CountCodepoints(s1);
+    const len2 = try std.unicode.utf8CountCodepoints(s2);
 
     if (len1 == 0) return len2;
     if (len2 == 0) return len1;
 
-    const rows = len1 + 1;
-    const cols = len2 + 1;
+    const is_v1_shorter = len1 < len2;
+    const s_len = if (is_v1_shorter) len1 else len2;
+    const short_str = if (is_v1_shorter) s1 else s2;
+    const long_str = if (is_v1_shorter) s2 else s1;
 
-    const table = try allocator.alloc(usize, rows * cols);
-    defer allocator.free(table);
+    const short_cp = try allocator.alloc(u21, s_len);
+    defer allocator.free(short_cp);
 
-    for (0..cols) |j| table[j] = j;
-    for (0..rows) |i| table[i * cols] = i;
+    var it_s = (try std.unicode.Utf8View.init(short_str)).iterator();
+    var idx: usize = 0;
+    while (it_s.nextCodepoint()) |cp| : (idx += 1) {
+        short_cp[idx] = cp;
+    }
 
-    for (1..rows) |i| {
-        for (1..cols) |j| {
-            if (cp1.items[i - 1] == cp2.items[j - 1]) {
-                table[i * cols + j] = table[(i - 1) * cols + (j - 1)];
-            } else {
-                const delete = table[(i - 1) * cols + j];
-                const insert = table[i * cols + (j - 1)];
-                const replace = table[(i - 1) * cols + (j - 1)];
-                table[i * cols + j] = 1 + @min(delete, @min(insert, replace));
-            }
+    const row = try allocator.alloc(usize, s_len + 1);
+    defer allocator.free(row);
+
+    for (0..s_len + 1) |j| row[j] = j;
+
+    var it_l = (try std.unicode.Utf8View.init(long_str)).iterator();
+    var i: usize = 1;
+    while (it_l.nextCodepoint()) |cp_l| : (i += 1) {
+        var prev_sub_cost = row[0];
+        row[0] = i;
+
+        for (0..s_len) |j| {
+            const cost: usize = if (cp_l == short_cp[j]) 0 else 1;
+            const substitution_cost = prev_sub_cost + cost;
+
+            prev_sub_cost = row[j + 1];
+
+            row[j + 1] = @min(substitution_cost, @min(row[j] + 1, row[j + 1] + 1));
         }
     }
 
-    return table[(rows - 1) * cols + (cols - 1)];
+    return row[s_len];
 }
